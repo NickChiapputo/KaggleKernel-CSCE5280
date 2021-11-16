@@ -37,8 +37,7 @@ def split_gesture_data( data: pd.DataFrame, gestures: list = None ):
 
 def train_test_split( data, train_subjects=None,
                       test_subjects=None,
-                      val_subjects=None,
-                      sel_gestures=None ):
+                      val_subjects=None ):
     """
     Split the given dataframe into test and train data and labels. Data is
     of shape (length, 3) where length is the number of samples in a gesture
@@ -50,17 +49,12 @@ def train_test_split( data, train_subjects=None,
     :param test_subjects: List of user indexes over [0, 7] to select for test
     data. If None, use test_gestures to split.
 
-    :param test_gestures: List of gesture indexes over [0, 19] to select for
-    test data. Only used if test_subjects is None.
-
     :return: Training data, training labels, testing data, testing labels,
     validation data, validation labels.
     """
 
     if train_subjects is None or test_subjects is None:
         raise ValueError( "Must provide train and test subjects list." )
-
-    # TODO: Select sub-set of gestures if provided.
 
 
     # Define the column we're selecting by.
@@ -124,7 +118,7 @@ def get_gesture_data( path, data_column_headers=None ):
     """
 
     if data_column_headers is None:
-        data_column_headers = [ 'x', 'y', 'z', 'absolute' ]
+        data_column_headers = [ 'x', 'y', 'z' ]
 
     # Create converter dictionary to literal_eval selected columns.
     converters = {
@@ -153,14 +147,12 @@ def truncate_data( data, length ):
             data.at[ idx, 'x' ] = row[ 'x' ][ :length ]
             data.at[ idx, 'y' ] = row[ 'y' ][ :length ]
             data.at[ idx, 'z' ] = row[ 'z' ][ :length ]
-            data.at[ idx, 'absolute' ] = row[ 'absolute' ][ :length ]
         elif len( row[ 'x' ] ) < length:
             pad_length = length - len( row[ 'x' ] )
 
             data.at[ idx, 'x' ] = row[ 'x' ][ : ] + ( [ 0 ] * pad_length )
             data.at[ idx, 'y' ] = row[ 'y' ][ : ] + ( [ 0 ] * pad_length )
             data.at[ idx, 'z' ] = row[ 'z' ][ : ] + ( [ 0 ] * pad_length )
-            data.at[ idx, 'absolute' ] = row[ 'absolute' ][ : ] + ( [ 0 ] * pad_length )
 
     return data
 
@@ -204,7 +196,7 @@ def process_data( path='./aggregated_gesture_data.csv',
         # Transpose the data before and after scaling since StandardScaler
         # operates on columns, not rows.
         scaled_data = scaler.fit_transform(
-            np.array( [ row[ 'x' ], row[ 'y' ], row[ 'z' ], row[ 'absolute' ] ] ).T
+            np.array( [ row[ 'x' ], row[ 'y' ], row[ 'z' ] ] ).T
         ).T
 
         # Update the data. Convert to list so that it can be properly
@@ -213,7 +205,6 @@ def process_data( path='./aggregated_gesture_data.csv',
         aggregated_data.at[ idx, 'x' ] = scaled_data[ 0 ].tolist()
         aggregated_data.at[ idx, 'y' ] = scaled_data[ 1 ].tolist()
         aggregated_data.at[ idx, 'z' ] = scaled_data[ 2 ].tolist()
-        aggregated_data.at[ idx, 'absolute' ] = scaled_data[ 3 ].tolist()
 
     if target is not None:
         aggregated_data.to_csv( target, index=False )
